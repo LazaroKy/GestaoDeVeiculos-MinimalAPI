@@ -11,6 +11,22 @@ namespace UsersVehicles_Api.Infraestrutura.Db
     public class DbVehiclesContext : DbContext
     {
         public DbSet<Administrador> Administradores { get; set; } = default!;
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            //Seeding databse with a admin
+            modelBuilder.Entity<Administrador>().HasData(
+                new Administrador
+                {
+                    Id = 1,
+                    Email = "superadmin@gmail.com",
+                    Senha = "1234567",
+                    Perfil = "Admin"
+                }
+            );
+        }
+        
         public DbVehiclesContext(DbContextOptions builder) : base(builder)
         {
             //Detectar string de conexão a partir da injeção de serviço no program

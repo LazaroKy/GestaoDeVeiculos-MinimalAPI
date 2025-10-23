@@ -1,9 +1,15 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UsersVehicles_Api.Dominio.DTOs;
+using UsersVehicles_Api.Dominio.Interfaces;
+using UsersVehicles_Api.Dominio.Servicos;
 using UsersVehicles_Api.Infraestrutura.Db;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//P injeção de dependência
+builder.Services.AddScoped<IAdministradorServico, AdministradorServico>();
 
 builder.Services.AddDbContext<DbVehiclesContext>(options =>
 {
@@ -15,9 +21,9 @@ var app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");
 
-app.MapPost("/login", (LoginDTO loginDto) =>
+app.MapPost("/login", ([FromBody]LoginDTO loginDto, IAdministradorServico administradorServico) =>
 {
-    if (loginDto.Email == "superadmin@gmail.com" && loginDto.Senha == "1234567")
+    if (administradorServico.Login(loginDto) != null)
     {
         return Results.Ok("Login realizado com sucesso!");
     }
