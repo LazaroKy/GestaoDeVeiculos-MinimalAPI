@@ -41,7 +41,7 @@ namespace UsersVehicles_Api.Dominio.Servicos
             _dbContext.SaveChanges();
         }
 
-        public List<Veiculo> Todos(int pagina = 1, string? nome = null, string? marca = null)
+        public List<Veiculo> Todos(int? pagina = 1, string? nome = null, string? marca = null)
         {
             //Query baseada no IQueryable
             var query = _dbContext.Veiculos.AsQueryable();
@@ -53,12 +53,10 @@ namespace UsersVehicles_Api.Dominio.Servicos
                 query = query.Where(v => v.Marca.ToLower().Contains(marca.ToLower()));
             int itensPorPagina = 5;
 
-            var veiculos = query.OrderBy(v => v.Id) 
-                .Skip((pagina - 1) * itensPorPagina)
-                .Take(itensPorPagina)
-                .ToList();
+            if(pagina!=null)
+            query = query.OrderBy(v => v.Id).Skip(((int)pagina - 1) * itensPorPagina).Take(itensPorPagina);
 
-            return veiculos;
+            return query.ToList();
         }
     }
 }
