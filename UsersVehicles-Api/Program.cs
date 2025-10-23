@@ -1,7 +1,16 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using UsersVehicles_Api.Dominio.DTOs;
+using UsersVehicles_Api.Infraestrutura.Db;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<DbVehiclesContext>(options =>
+{
+    options.UseNpgsql(builder.Configuration
+    .GetConnectionString("PostgreSQLConnection")); 
+});
+
 var app = builder.Build();
 
 app.MapGet("/", () => "Hello World!");
