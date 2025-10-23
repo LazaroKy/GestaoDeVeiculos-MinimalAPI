@@ -11,6 +11,9 @@ namespace UsersVehicles_Api.Infraestrutura.Db
     public class DbVehiclesContext : DbContext
     {
         public DbSet<Administrador> Administradores { get; set; } = default!;
+
+        public DbSet<Veiculo> Veiculos { get; set; } = default!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
