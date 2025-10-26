@@ -11,5 +11,8 @@ namespace UsersVehicles_Api.Dominio.Interfaces
     public interface IAdministradorServico
     {
         Administrador? Login(LoginDTO loginDTO);
+        Administrador Incluir(Administrador admDto);
+
+        List<Administrador> Todos(int? pagina);
     }
 }

@@ -17,10 +17,30 @@ namespace UsersVehicles_Api.Dominio.Servicos
         {
             _dbContext = dbcontext;
         }
+
+        public Administrador Incluir(Administrador adm)
+        {
+            _dbContext.Administradores.Add(adm);
+            _dbContext.SaveChanges();
+            return adm;
+        }
+
         public Administrador? Login(LoginDTO loginDTO)
         {
 
             return _dbContext.Administradores.Where(adm => adm.Email == loginDTO.Email && adm.Senha == loginDTO.Senha).FirstOrDefault();
+        }
+
+        public List<Administrador> Todos(int? pagina)
+        {
+            var query = _dbContext.Administradores.AsQueryable();
+            int itensPorPagina = 10;
+
+            if(pagina!=null)
+            query = query.OrderBy(v => v.Id).Skip(((int)pagina - 1) * itensPorPagina).Take(itensPorPagina);
+
+            return query.ToList();
+      
         }
     }
 }
