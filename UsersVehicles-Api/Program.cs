@@ -48,8 +48,26 @@ app.MapPost("/login", ([FromBody] LoginDTO loginDto, IAdministradorServico admin
 #endregion
 
 #region Veiculos
+ErrosDeValidacao validaDTO(VeiculoDTO veiculoDto)
+{
+    var validacoes = new ErrosDeValidacao{
+        Mensagens= new List<string>()
+    };
+
+    if (string.IsNullOrEmpty(veiculoDto.Nome)) validacoes.Mensagens.Add("Informe o nome do veículo!");
+    if (string.IsNullOrEmpty(veiculoDto.Marca)) validacoes.Mensagens.Add("Informe a marca do veículo!");
+    if (veiculoDto.Ano < 1950) validacoes.Mensagens.Add("Somente são aceitos veículos novos. Com ano superior a 1949");
+
+    return validacoes;
+}
+
 app.MapPost("/veiculos", ([FromBody] VeiculoDTO veiculoDto, IVeiculoServico veiculoServico) =>
 {
+    ErrosDeValidacao validacao = validaDTO(veiculoDto);
+    if(validacao.Mensagens.Count > 0)
+    {
+        return Results.BadRequest(validacao);
+    }
     var veiculo = new Veiculo
     {
         Nome = veiculoDto.Nome,
@@ -80,12 +98,25 @@ app.MapPut("/veiculos/{id}", ([FromRoute]int id,[FromBody] VeiculoDTO veiculoDto
     var veiculo = veiculoServico.BuscaPorId(id);
     if (veiculo == null) return Results.NotFound("Não foi encontrado veículo com ID " + id);
 
+    ErrosDeValidacao validacao = validaDTO(veiculoDto);
+    if(validacao.Mensagens.Count > 0)
+    {
+        return Results.BadRequest(validacao);
+    }
     veiculo.Nome = veiculoDto.Nome;
     veiculo.Marca = veiculoDto.Marca;
     veiculo.Ano = veiculoDto.Ano;
 
     veiculoServico.Atualizar(veiculo);
     return Results.Ok(veiculo);
+}).WithTags("Veiculos");
+
+app.MapDelete("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServico) =>
+{
+    var veiculo = veiculoServico.BuscaPorId(id);
+    if (veiculo == null) return Results.NotFound("Não foi encontrado veículo com ID " + id);
+    veiculoServico.Apagar(veiculo);
+    return Results.NoContent();
 }).WithTags("Veiculos");
 #endregion
 
