@@ -14,5 +14,6 @@ namespace UsersVehicles_Api.Dominio.Interfaces
         Administrador Incluir(Administrador admDto);
 
         List<Administrador> Todos(int? pagina);
+        Administrador? BuscarPorId(int id);
     }
 }

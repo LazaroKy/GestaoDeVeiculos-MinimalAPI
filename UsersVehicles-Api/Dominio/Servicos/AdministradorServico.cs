@@ -18,6 +18,11 @@ namespace UsersVehicles_Api.Dominio.Servicos
             _dbContext = dbcontext;
         }
 
+        public Administrador? BuscarPorId(int id)
+        {
+           return _dbContext.Administradores.Find(id);
+        }
+
         public Administrador Incluir(Administrador adm)
         {
             _dbContext.Administradores.Add(adm);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UsersVehicles_Api.Dominio.DTOs;
 using UsersVehicles_Api.Dominio.Entidades;
+using UsersVehicles_Api.Dominio.Enums;
 using UsersVehicles_Api.Dominio.Interfaces;
 using UsersVehicles_Api.Dominio.ModelViews;
 using UsersVehicles_Api.Dominio.Servicos;
@@ -45,6 +46,72 @@ app.MapPost("/login", ([FromBody] LoginDTO loginDto, IAdministradorServico admin
     }
 })
 .WithTags("Administradores"); //Divisão no swagger
+
+app.MapPost("/administradores", ([FromBody] AdministradorDTO admDto, IAdministradorServico administradorServico) =>
+{
+    var validacao = new ErrosDeValidacao
+    {
+        Mensagens = new List<string>()
+    };
+    if (string.IsNullOrEmpty(admDto.Email)) validacao.Mensagens.Add("O email não pode estar vazio");
+    if (string.IsNullOrEmpty(admDto.Senha)) validacao.Mensagens.Add("A senha não pode estar vazio");
+    if (admDto.Perfil == null) validacao.Mensagens.Add("O perfil não pode estar vazio");
+
+    if (validacao.Mensagens.Count > 0)
+    {
+        return Results.BadRequest(validacao);
+    }
+
+    var adm = new Administrador
+    {
+        Email = admDto.Email,
+        Senha = admDto.Senha,
+        Perfil = admDto.Perfil.ToString() ?? Perfil.Editor.ToString()
+    };
+
+    administradorServico.Incluir(adm);
+    AdministradorModelView admView = new AdministradorModelView
+    {
+        Id = adm.Id,
+        Email = adm.Email,
+        Perfil = adm.Perfil
+    };
+    return Results.Created($"/administradores/{adm.Id}", admView);
+
+})
+.WithTags("Administradores");
+
+app.MapGet("/administradores", ([FromQuery] int? pagina, IAdministradorServico administradorServico) =>
+{
+    var admsView = new List<AdministradorModelView>();
+    var administradores = administradorServico.Todos(pagina);
+
+    foreach(var adm in administradores)
+    {
+        admsView.Add(new AdministradorModelView
+        {
+            Id = adm.Id,
+            Email = adm.Email,
+            Perfil = adm.Perfil
+        });
+    }
+    return Results.Ok(admsView);
+}).WithTags("Administradores");
+
+app.MapGet("/administradores/{id}", ([FromRoute] int id, IAdministradorServico administradorServico) =>
+{
+    var administrador = administradorServico.BuscarPorId(id);
+    if (administrador == null) return Results.NotFound("Não foi encontrado administrador com ID " + id);
+    AdministradorModelView admView = new AdministradorModelView
+    {
+        Id = administrador.Id,
+        Email = administrador.Email,
+        Perfil = administrador.Perfil
+    };
+    return Results.Ok(admView);
+}).WithTags("Administradores");
+
+
 #endregion
 
 #region Veiculos
