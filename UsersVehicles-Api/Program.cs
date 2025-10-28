@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using UsersVehicles_Api.Dominio.DTOs;
 using UsersVehicles_Api.Dominio.Entidades;
 using UsersVehicles_Api.Dominio.Enums;
@@ -20,16 +21,16 @@ var builder = WebApplication.CreateBuilder(args);
 var jwtKey = builder.Configuration.GetSection("Jwt").GetValue<string>("SecretKey");//Deve ter pelo menos 256 bits por culpa do algoritmo q estamos usando
 if (string.IsNullOrEmpty(jwtKey)) jwtKey = "123456789-123456789-123456789-123456789"; 
 builder.Services.AddAuthentication(options =>
-{
+{ //Configurações de autenticação
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme; 
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
-{
+{  //Config p processamento do Jwt
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateLifetime = true, //Se o token não expirou
-        //validateIssuer = true //veirificar se o token veio de um emissor (issuer) - configure validIssuer 
-        //ValidateAudience = true //verificar se é destinado a publico (audience) 
+        ValidateIssuer = false, //verificar se o token veio de um emissor (issuer) - configure validIssuer 
+        ValidateAudience = false, //verificar se é destinado a publico (audience) 
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)) //chave p verificar assinatura
     };
 });
@@ -42,7 +43,30 @@ builder.Services.AddScoped<IVeiculoServico, VeiculoServico>();
 
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorizathion",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insira seu token Jwt aqui!"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+{
+    { new OpenApiSecurityScheme{
+        Reference = new OpenApiReference
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = "Bearer"
+        }
+    }, new string[]{}
+    }
+});
+});
 
 builder.Services.AddDbContext<DbVehiclesContext>(options =>
 {
@@ -53,8 +77,9 @@ var app = builder.Build();
 #endregion
 
 #region Home
-app.MapGet("/", () => Results.Json(new Home()))
+app.MapGet("/", () => Results.Json(new Home())).AllowAnonymous()
 .WithTags("Home");
+
 #endregion
 
 #region Administradores
@@ -96,7 +121,7 @@ app.MapPost("/login", ([FromBody] LoginDTO loginDto, IAdministradorServico admin
     {
         return Results.Unauthorized();
     }
-})
+}).AllowAnonymous()
 .WithTags("Administradores"); //Divisão no swagger
 
 app.MapPost("/administradores", ([FromBody] AdministradorDTO admDto, IAdministradorServico administradorServico) =>
@@ -251,8 +276,8 @@ app.MapDelete("/veiculos/{id}", ([FromRoute] int id, IVeiculoServico veiculoServ
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseAuthentication(); //Api precisar de autenticação 
+app.UseAuthorization(); //Precisar de autorização
 
 app.Run();
 #endregion
