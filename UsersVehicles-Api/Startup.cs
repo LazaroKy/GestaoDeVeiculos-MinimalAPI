@@ -88,6 +88,15 @@ public class Startup
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        using (var scope = app.ApplicationServices.CreateScope())
+        {
+            if(!env.IsEnvironment("Testing")) //Em teste dar erro ao executar o Migrate, pelo banco em memória não aceitar migrations
+            {
+                var db = scope.ServiceProvider.GetRequiredService<DbVehiclesContext>();
+                db.Database.Migrate(); //P add as migrations novas ao db automaticamente
+            }
+        }//o using serve p não manter aberto
+        
         app.UseSwagger();
         app.UseSwaggerUI();
 
