@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres-ve
+    environment:
+      POSTGRES_USER: adminveh
+      POSTGRES_PASSWORD: adminveh1
+      POSTGRES_DB: vehicles_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data 
+  
+  veiculo-api:
+    image: lazaroky/veiculo-api:1.0.0
+    container_name: veiculos-container
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+    - "5027:5027"
+    depends_on: 
+      - postgres
+
+volumes: 
+  pg_data: 
